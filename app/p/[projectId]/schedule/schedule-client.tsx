@@ -8,6 +8,8 @@ type JobDesc = { key: string; label: string; about: string; min_hours: number; o
 export function ScheduleClient({ projectId, initialJobs, isAdmin }: { projectId: string; initialJobs: JobDesc[]; isAdmin: boolean }) {
   const [jobs, setJobs] = useState(initialJobs);
   const [err, setErr] = useState("");
+  const [msg, setMsg] = useState<Record<string, string>>({});
+  const [busy, setBusy] = useState<string | null>(null);
 
   async function toggle(key: string, on: boolean) {
     setJobs(jobs.map((j) => (j.key === key ? { ...j, on } : j)));
@@ -19,11 +21,14 @@ export function ScheduleClient({ projectId, initialJobs, isAdmin }: { projectId:
   }
 
   async function runNow(kind: string) {
-    setErr("");
+    setErr(""); setBusy(kind); setMsg((m) => ({ ...m, [kind]: "" }));
     try {
-      await api(`/api/projects/${projectId}/run`, { method: "POST", body: { kind } });
+      const res = await api<{ queued: boolean }>(`/api/projects/${projectId}/run`, { method: "POST", body: { kind } });
+      setMsg((m) => ({ ...m, [kind]: res.queued ? "در صف قرار گرفت — نتیجه را در «فعالیت و کارها» ببین." : "از قبل در صف بود." }));
     } catch (e) {
-      setErr(e instanceof ApiError ? e.message : "خطا");
+      setMsg((m) => ({ ...m, [kind]: e instanceof ApiError ? e.message : "خطا" }));
+    } finally {
+      setBusy(null);
     }
   }
 
@@ -42,7 +47,14 @@ export function ScheduleClient({ projectId, initialJobs, isAdmin }: { projectId:
               <td>{j.last ? formatJalaliDateTime(j.last * 1000) : "—"}</td>
               <td>{j.idle ? "غیرفعال" : j.next ? formatJalaliDateTime(j.next * 1000) : "—"}</td>
               <td>
-                {isAdmin && j.key !== "uptime" && <button className="btn sm" onClick={() => runNow(j.key)}>اجرای الان</button>}
+                {isAdmin && j.key !== "uptime" && (
+                  <div className="row" style={{ gap: 6 }}>
+                    <button className="btn sm" disabled={busy === j.key} onClick={() => runNow(j.key)}>
+                      {busy === j.key ? "در حال ارسال..." : "اجرای الان"}
+                    </button>
+                    {msg[j.key] && <span className="muted small">{msg[j.key]}</span>}
+                  </div>
+                )}
               </td>
             </tr>
           ))}

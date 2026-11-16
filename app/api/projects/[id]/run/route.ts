@@ -10,7 +10,7 @@ import { enqueue } from "@/lib/jobs/queues";
 import { logActivity } from "@/lib/activity";
 import type { JobKey } from "@/lib/schedule";
 
-const JOB_KINDS = new Set(["audit", "gsc", "catalog", "speed", "index", "watch", "articles", "kwgap"]);
+const JOB_KINDS = new Set(["audit", "gsc", "catalog", "speed", "index", "watch", "articles", "kwgap", "prices", "report"]);
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id: pid } = await params;
