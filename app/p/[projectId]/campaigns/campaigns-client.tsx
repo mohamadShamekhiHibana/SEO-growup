@@ -57,6 +57,21 @@ export function CampaignsClient({ projectId, initial }: { projectId: string; ini
   const [form, setForm] = useState<FormState>(EMPTY);
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
+  const [autoTitle, setAutoTitle] = useState("");
+  const [autoBusy, setAutoBusy] = useState(false);
+
+  async function autoGen() {
+    setAutoBusy(true); setErr("");
+    try {
+      const c = await api<CampaignRow>(`/api/projects/${projectId}/campaigns/auto`, { method: "POST", body: { title: autoTitle || undefined } });
+      setRows([c, ...rows]);
+      setAutoTitle("");
+    } catch (e) {
+      setErr(e instanceof ApiError ? e.message : "خطا");
+    } finally {
+      setAutoBusy(false);
+    }
+  }
 
   function openNew() { setForm(EMPTY); setErr(""); dialogRef.current?.showModal(); }
   function openEdit(c: CampaignRow) { setForm(toForm(c)); setErr(""); dialogRef.current?.showModal(); }
@@ -119,6 +134,18 @@ export function CampaignsClient({ projectId, initial }: { projectId: string; ini
         </div>
         <span className="spacer" />
         <button type="button" className="btn primary sm" onClick={openNew}><Icon name="plus" />کمپین جدید</button>
+      </div>
+
+      <div className="row" style={{ gap: 8, margin: "0 0 12px", flexWrap: "wrap" }}>
+        <input
+          placeholder="عنوان (اختیاری — خالی بگذار تا خودش بهترین فرصت را پیدا کند)"
+          style={{ minWidth: 280 }}
+          value={autoTitle}
+          onChange={(e) => setAutoTitle(e.target.value)}
+        />
+        <button type="button" className="btn sm" disabled={autoBusy} onClick={autoGen}>
+          {autoBusy ? "در حال ساخت..." : "ساخت خودکار با هوش مصنوعی"}
+        </button>
       </div>
 
       {err && <div className="err" role="alert">{err}</div>}

@@ -13,6 +13,14 @@ export function formatJalaliDateTime(ts: number): string {
   return jDateTime.format(new Date(ts));
 }
 
+const jYmd = new Intl.DateTimeFormat("fa-IR-u-ca-persian-nu-latn", { year: "numeric", month: "2-digit", day: "2-digit" });
+
+/** "YYYY/MM/DD" in Latin digits — the slash format lib/campaigns.ts's DATE_RE expects. */
+export function jalaliYmd(ts: number): string {
+  const parts = Object.fromEntries(jYmd.formatToParts(new Date(ts)).map((p) => [p.type, p.value]));
+  return `${parts.year}/${parts.month}/${parts.day}`;
+}
+
 export function icuSmokeTest(): { ok: boolean; sample: string; calendar: string } {
   const resolved = jDate.resolvedOptions();
   const sample = jDate.format(new Date());
