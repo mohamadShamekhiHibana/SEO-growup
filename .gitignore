@@ -1,0 +1,8 @@
+.env
+data/reports/
+data/inbox/
+__pycache__/
+.DS_Store
+data/agent.db
+data/*.db
+*.db-journal
