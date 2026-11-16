@@ -12,11 +12,9 @@
 // own import of the same file pushed one. `globalThis` is the one thing both module
 // instances actually share within the same OS process.
 //
-// Dispatch is HONEST about what's ported: "uptime" actually runs (lib/tools.ts's ping()).
-// Every other job kind (audit/catalog/gsc/speed/watch/kwgap/prices/report/apply/undo/index/
-// articles) records a real `runs` row with status='error' and a clear "not built yet"
-// message — it never fakes success. Each of those lands with the phase that ports its
-// module (Phase 5's module groups, or Phase 5c for apply/undo once adapters exist).
+// Every job kind dispatches to a real, ported module now (uptime/audit/catalog/gsc/speed/
+// watch/kwgap/prices/report/apply/undo/index/articles/recheck) — an unknown kind still
+// records a real `runs` row with status='error' rather than faking success.
 import { run, one } from "../db";
 import { project } from "../projects";
 import { ping } from "../tools";
@@ -31,6 +29,8 @@ import { undoBatch, watch as policyWatch } from "../policy";
 import { dropFailed, track as trackKeywords } from "../keywords";
 import { check as checkPrices } from "../prices";
 import { autoWrite, autoWriteFixes } from "../content";
+import { runIndex, runWatches, runReport } from "../extras";
+import { syncArticles, refreshIdeas } from "../planner";
 
 export type Job = { project: string; kind: string; auto?: boolean; ids?: number[]; user?: string; [k: string]: unknown };
 
@@ -59,9 +59,6 @@ export const state = shared.state;
 const lanes = shared.lanes;
 
 const HISTORY_MAX = 30;
-
-// Not yet ported from Python; each is added as its owning module lands.
-const NOT_IMPLEMENTED = new Set(["watch", "report", "index", "articles", "recheck"]);
 
 function laneFor(kind: string): Lane {
   if (kind === "apply" || kind === "undo" || kind === "write_content" || kind === "write_fixes") return "writeJobs";
@@ -194,8 +191,60 @@ async function runJob(job: Job, rid: number | bigint, progress: (done: number, t
       return { status: "error", error: String((e as Error).message || e).slice(0, 500) };
     }
   }
-  if (NOT_IMPLEMENTED.has(job.kind)) {
-    return { status: "error", error: `این نوع کار («${job.kind}») هنوز در نسخه Next.js پیاده نشده؛ منتظر فاز مربوطه بمانید.` };
+  if (job.kind === "recheck") {
+    // Same crawl, but only_open=true — rereads just the pages that already have an open
+    // issue instead of the whole site. Recorded under its own kind so "last recheck" and
+    // "last full audit" don't get mixed up in schedule.ts's lastTimes().
+    const p = project(job.project);
+    if (!p) return { status: "error", error: "پروژه پیدا نشد" };
+    try {
+      const result = await audit(p, (k) => progress(k.done ?? 0, k.total ?? 0, k.message ?? ""), true);
+      const fixed = saveAudit(job.project, Number(rid), result);
+      return { status: "ok", summary: { ...result.summary, fixed } };
+    } catch (e) {
+      return { status: "error", error: String((e as Error).message || e).slice(0, 500) };
+    }
+  }
+  if (job.kind === "index") {
+    const p = project(job.project);
+    if (!p) return { status: "error", error: "پروژه پیدا نشد" };
+    try {
+      const r = await runIndex(p, progress, !!job.only_open);
+      return { status: "ok", summary: r };
+    } catch (e) {
+      return { status: "error", error: String((e as Error).message || e).slice(0, 500) };
+    }
+  }
+  if (job.kind === "watch") {
+    const p = project(job.project);
+    if (!p) return { status: "error", error: "پروژه پیدا نشد" };
+    try {
+      const r = await runWatches(p, progress);
+      return { status: "ok", summary: r };
+    } catch (e) {
+      return { status: "error", error: String((e as Error).message || e).slice(0, 500) };
+    }
+  }
+  if (job.kind === "articles") {
+    const p = project(job.project);
+    if (!p) return { status: "error", error: "پروژه پیدا نشد" };
+    try {
+      const synced = await syncArticles(p);
+      const ideas = refreshIdeas(p);
+      return { status: "ok", summary: { ...synced, ...ideas } };
+    } catch (e) {
+      return { status: "error", error: String((e as Error).message || e).slice(0, 500) };
+    }
+  }
+  if (job.kind === "report") {
+    const p = project(job.project);
+    if (!p) return { status: "error", error: "پروژه پیدا نشد" };
+    try {
+      const r = runReport(p);
+      return { status: "ok", summary: r };
+    } catch (e) {
+      return { status: "error", error: String((e as Error).message || e).slice(0, 500) };
+    }
   }
   void progress;
   return { status: "error", error: `نوع کار ناشناخته: ${job.kind}` };

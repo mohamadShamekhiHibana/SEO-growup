@@ -16,6 +16,8 @@ const NAV: [string, string, string][] = [
   ["fixes", "اصلاحات متنی", "check"],
   ["pages", "صفحات", "file"],
   ["uptime", "آپتایم", "activity"],
+  ["watches", "پایش رقبا", "search"],
+  ["reports", "گزارش هفتگی", "file"],
   ["gsc", "سرچ کنسول", "search"],
   ["catalog", "محصولات", "file"],
   ["funnel", "فروش", "dollar"],
