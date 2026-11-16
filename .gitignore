@@ -43,3 +43,7 @@ next-env.d.ts
 
 # local dev data (a copy of hub.db, never the live file — see plan's cutover section)
 /data/
+
+# ai-growth-agent
+__pycache__/
+*.db-journal

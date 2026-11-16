@@ -1,0 +1,76 @@
+{
+  "seo": {
+    "skill": "skills/seo-audit.md",
+    "can": [
+      "read",
+      "propose"
+    ],
+    "desc": "ممیزی و پیشنهاد اصلاح سئو"
+  },
+  "keywords": {
+    "skill": "skills/keyword-research.md",
+    "can": [
+      "read",
+      "propose"
+    ],
+    "desc": "خوشه‌بندی کلمات و نگاشت به صفحه"
+  },
+  "content": {
+    "skill": "skills/article-writer.md",
+    "can": [
+      "read",
+      "draft"
+    ],
+    "desc": "مقاله و محتوای محصول (draft)"
+  },
+  "analytics": {
+    "skill": "skills/analytics.md",
+    "can": [
+      "read",
+      "snapshot",
+      "learn"
+    ],
+    "desc": "متریک هفتگی و یادگیری از نتایج"
+  },
+  "instagram": {
+    "skill": "skills/instagram.md",
+    "can": [
+      "read",
+      "propose"
+    ],
+    "desc": "برنامه و متن پست‌های اینستاگرام (بدون انتشار)"
+  },
+  "marketing": {
+    "skill": "skills/marketing.md",
+    "can": [
+      "read",
+      "propose"
+    ],
+    "desc": "برنامه کمپین ماهانه و متن‌های آماده (بدون ارسال)"
+  },
+  "learning": {
+    "skill": "skills/learning.md",
+    "can": [
+      "read",
+      "learn",
+      "experiment"
+    ],
+    "desc": "یادگیری هفتگی از نتایج و آزمایش‌ها"
+  },
+  "pricewatch": {
+    "skill": "skills/pricewatch.md",
+    "can": [
+      "read",
+      "report"
+    ],
+    "desc": "قیمت رقبا از لینک‌های مجاز؛ فقط گزارش"
+  },
+  "images": {
+    "skill": "skills/images.md",
+    "can": [
+      "read",
+      "render"
+    ],
+    "desc": "ساخت کاور مقاله و عکس اینستاگرام از عکس واقعی محصول"
+  }
+}
